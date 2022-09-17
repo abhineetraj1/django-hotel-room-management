@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	{% load static %}
+	<link rel="stylesheet" type="text/css" href="{% static 'index.min.css' %}">
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title></title>
+</head>
+<body>
+<!--	{% for i in r %}
+{{i}}
+<br>
+{% endfor %} -->
+
+<style type="text/css">
+</style>
+{% for i in r %}
+<div class="container">
+	<img src="{% static 'room.jpg' %}" class="container-image">
+	<div class="container-tt" >Room number : {{i}}</div>
+	<button class="container-btn">Book</button>
+	<br>
+</div>
+{% endfor %}
+
+</body>
+</html>
