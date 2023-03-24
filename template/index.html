@@ -4,28 +4,28 @@
 	{% load static %}
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
+	<link rel="shortcut icon" href="{% static 'media/ffav.png' %}">
 	<title>Hotel</title>
 	<script type="text/javascript">
 		
 	</script>
-	<link rel="stylesheet" type="text/css" href="{% static 'index.min.css' %}">
 </head>
 <body>
 <form method="POST" action="/room">
 	{% csrf_token %}
 	<table>
 		<tr>
-			<td><h1>Check in</h1></td>
+			<td><p class="ttl">Check in</p></td>
 			<td><input type="date" name="check_in"></td>
 		</tr>
 		<tr>
-			<td><h1>Check out</h1></td>
+			<td><p class="ttl">Check out</p></td>
 			<td><input type="date" name="check_out"></td>
 		</tr>
 	</table>
-	<button>Search</button>
+	<button class="vtn">Search</button>
 </form>
-<hr>
-<a href="/list_booked"><button>List booked rooms</button></a>
+<a href="/list_booked"><button class="vtn">List booked rooms</button></a>
 </body>
 </html>

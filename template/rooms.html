@@ -2,23 +2,24 @@
 <html>
 <head>
 	{% load static %}
-	<link rel="stylesheet" type="text/css" href="{% static 'index.min.css' %}">
+	<link rel="stylesheet" type="text/css" href="{% static 'room.css' %}">
 	<meta charset="utf-8">
 	<title>Room book</title>
+	<link rel="shortcut icon" href="{% static 'media/ffav.png' %}">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title></title>
 </head>
 <body>
-<style type="text/css">
-</style>
-{% for i in r %}
-<div class="container">
-	<img src="{% static 'room.jpg' %}" class="container-image">
-	<div class="container-tt" >Room number : {{i}}</div>
-	<a href="/book/{{i}}/{{in_d}}/{{out_d}}/booked"><button class="container-btn">Book</button></a>			
-	<br>
+
+<div id="cont">
+	{% for i in r %}
+	<div class="container">
+		<img src="{% static 'room.jpg' %}" class="container-image">
+		<div class="container-tt" >Room number : {{i}}</div>
+		<a href="/book/{{i}}/{{in_d}}/{{out_d}}/booked"><button class="container-btn">Book</button></a>			
+		<br>
+	</div>
+	{% endfor %}
 </div>
-{% endfor %}
 
 </body>
 </html>
