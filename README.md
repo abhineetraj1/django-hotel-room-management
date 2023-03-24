@@ -1,5 +1,6 @@
 # Hotel room booking system
-This system helps to book and reserve rooms in hotel.
+![alt text](https://github.com/abhineetraj1/django-hotel-room-management/blob/main/screenshot.png?raw=true)
+Looking for a way to manage your hotel's room inventory with ease? Check out this Django-based hotel room management system! With this solution, you can easily add, edit, and remove rooms as well as track their availability and reservations. Perfect for hotel owners and managers looking for a simple yet effective way to streamline their operations.
 
 ## Features :-
 *	Register rooms
