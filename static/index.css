@@ -1,0 +1,51 @@
+body {
+  background: url('media/wll.jpg');
+  background-repeat: no-repeat;
+  background-size: auto;
+  background-position-x: center;
+  background-position-y: center;
+}
+.ttl{
+  font-weight: bold;
+  font-size: 23px;
+}
+input{
+  font-size: 20px;
+}
+form{
+  margin-top: 15vh;
+  background: #c4b28f;
+  position: relative;
+  width: 40%;
+  text-align: center;
+  left: 30%;
+  box-shadow: 0px 0px 10px black;
+}
+td{
+  margin: 0px;
+}
+tr{
+  text-align: center;
+  margin: 0px;
+}
+.vtn{
+  background: white;
+  font-size: 20px;
+  border: solid;
+  margin: 1vh;
+}
+.vtn:hover{
+  background: black;
+  color: white;
+  transform: rotateY(10deg);
+  border-width: 0px;
+  padding: 1vh;
+  box-shadow: 0px 0px 10px black;
+}
+@media screen and (max-width:900px) {
+  form{
+    position: relative;
+    width: 80%;
+    left: 10%;
+  }
+}
