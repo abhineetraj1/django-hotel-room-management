@@ -5,11 +5,12 @@ from django.shortcuts import render
 from datetime import *
 
 def Home(request):
-	return render (request, "index.html")
+	return render(request, "index.html")
 
 def Room(request):
 	if (request.method == "POST"):
 		dt = list_days(request.POST.get("check_in"), request.POST.get("check_out"))
+		print(dt)
 		r=[]
 		for i in os.listdir("rooms"):
 			st=open("rooms/"+i+"/status.txt","r").read()
@@ -25,7 +26,7 @@ def Room(request):
 						de.append(False)
 				if (False not in de):
 					r.append(str(i))
-		return render(request, "rooms.html",{"r":r,"message":"none"})
+		return render(request, "rooms.html",{"r":r,"message":"none","in_d":request.POST.get("check_in"),"out_d":request.POST.get("check_out")})
 	else:
 		return HttpResponse("<a href='/'><button>back</button></a>")
 
