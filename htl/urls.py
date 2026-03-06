@@ -17,10 +17,13 @@ from django.contrib import admin
 from django.urls import path
 from views import views
 urlpatterns = [
-#    path('admin/', admin.site.urls),
+    path('admin/', admin.site.urls),
     path('', views.Home),
     path('room', views.Room),
-    path('book/<str:room>/<str:in_d>/<str:out_d>/<str:details>',views.Book),
+    path('book/<str:room>/<str:in_d>/<str:out_d>/<str:name>/<str:phone>/<int:price>',views.Book),
     path('list_booked', views.list_booked),
-    path('debook/<str:room>', views.deBook)
+    path('debook/<str:room>', views.deBook),
+    path('add_expense', views.add_expense),
+    path('add_payment', views.add_payment),
+    path('invoice/<str:booking_id>', views.download_invoice)
 ]

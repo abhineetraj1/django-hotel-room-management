@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Notification | Hotel</title>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--indigo-500: #6366f1;
+			--indigo-600: #4f46e5;
+			--glass-bg: rgba(17, 25, 40, 0.75);
+			--glass-border: rgba(255, 255, 255, 0.125);
+			--text-main: #ffffff;
+		}
+
+		body {
+			margin: 0;
+			font-family: 'Outfit', sans-serif;
+			background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+			background-size: cover;
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-main);
+		}
+
+		.glass-card {
+			background: var(--glass-bg);
+			backdrop-filter: blur(16px) saturate(180%);
+			-webkit-backdrop-filter: blur(16px) saturate(180%);
+			border-radius: 12px;
+			border: 1px solid var(--glass-border);
+			padding: 40px;
+			width: 90%;
+			max-width: 450px;
+			box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+			text-align: center;
+		}
+
+		h1 {
+			margin-top: 0;
+			font-weight: 600;
+			font-size: 2rem;
+			margin-bottom: 1rem;
+			background: linear-gradient(to right, #fff, #a5b4fc);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
+
+		p {
+			font-size: 1.1rem;
+			color: #cbd5e1;
+			margin-bottom: 2rem;
+			line-height: 1.6;
+		}
+
+		.btn {
+			display: inline-block;
+			padding: 12px 24px;
+			border: none;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			font-family: inherit;
+			text-decoration: none;
+		}
+
+		.btn-primary {
+			background: var(--indigo-600);
+			color: white;
+			box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+		}
+
+		.btn-primary:hover {
+			background: var(--indigo-500);
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.23);
+		}
+	</style>
+</head>
+<body>
+	<div class="glass-card">
+		<h1>{{ title }}</h1>
+		<p>{{ message }}</p>
+		<a href="{{ url }}" class="btn btn-primary">{{ button_text }}</a>
+	</div>
+</body>
+</html>

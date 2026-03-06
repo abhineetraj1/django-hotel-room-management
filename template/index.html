@@ -1,31 +1,205 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	{% load static %}
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="stylesheet" type="text/css" href="{% static 'index.css' %}">
+	<title>Hotel | Book Your Stay</title>
 	<link rel="shortcut icon" href="{% static 'media/ffav.png' %}">
-	<title>Hotel</title>
-	<script type="text/javascript">
-		
-	</script>
+	
+	<!-- External Libraries -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+
+	<style>
+		:root {
+			--indigo-500: #6366f1;
+			--indigo-600: #4f46e5;
+			--glass-bg: rgba(255, 255, 255, 0.05);
+			--glass-border: rgba(255, 255, 255, 0.1);
+			--text-main: #ffffff;
+		}
+
+		body {
+			margin: 0;
+			font-family: 'Outfit', sans-serif;
+			background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+			background-size: cover;
+			height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-main);
+		}
+
+		.glass-card {
+			background: rgba(17, 25, 40, 0.75);
+			backdrop-filter: blur(16px) saturate(180%);
+			-webkit-backdrop-filter: blur(16px) saturate(180%);
+			border-radius: 12px;
+			border: 1px solid rgba(255, 255, 255, 0.125);
+			padding: 40px;
+			width: 90%;
+			max-width: 450px;
+			box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+			text-align: center;
+		}
+
+		h1 {
+			margin-top: 0;
+			font-weight: 600;
+			font-size: 2rem;
+			margin-bottom: 1.5rem;
+			background: linear-gradient(to right, #fff, #a5b4fc);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+		}
+
+		.input-group {
+			margin-bottom: 20px;
+			text-align: left;
+		}
+
+		label {
+			display: block;
+			margin-bottom: 8px;
+			font-size: 0.9rem;
+			color: #cbd5e1;
+		}
+
+		.date-input {
+			width: 100%;
+			padding: 15px;
+			border-radius: 8px;
+			border: 1px solid var(--glass-border);
+			background: rgba(255, 255, 255, 0.05);
+			color: #fff;
+			font-size: 1rem;
+			box-sizing: border-box;
+			transition: all 0.3s ease;
+			font-family: inherit;
+		}
+
+		.date-input:focus {
+			outline: none;
+			border-color: var(--indigo-500);
+			background: rgba(255, 255, 255, 0.1);
+			box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+		}
+
+		.btn {
+			width: 100%;
+			padding: 15px;
+			border: none;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			font-family: inherit;
+		}
+
+		.btn-primary {
+			background: var(--indigo-600);
+			color: white;
+			margin-bottom: 15px;
+			box-shadow: 0 4px 14px 0 rgba(99, 102, 241, 0.39);
+		}
+
+		.btn-primary:hover {
+			background: var(--indigo-500);
+			transform: translateY(-2px);
+			box-shadow: 0 6px 20px 0 rgba(99, 102, 241, 0.23);
+		}
+
+		.btn-secondary {
+			background: transparent;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			color: #e2e8f0;
+		}
+
+		.btn-secondary:hover {
+			background: rgba(255, 255, 255, 0.05);
+			border-color: #fff;
+		}
+
+		/* Flatpickr Dark/Indigo Theme Overrides */
+		.flatpickr-calendar {
+			background: #1e293b !important;
+			border: 1px solid rgba(255, 255, 255, 0.1) !important;
+			box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+		}
+		.flatpickr-day.selected, .flatpickr-day.startRange, .flatpickr-day.endRange, .flatpickr-day.selected.inRange, .flatpickr-day.startRange.inRange, .flatpickr-day.endRange.inRange {
+			background: var(--indigo-600) !important;
+			border-color: var(--indigo-600) !important;
+		}
+		.flatpickr-day.inRange {
+			box-shadow: -5px 0 0 #3730a3, 5px 0 0 #3730a3 !important;
+			background: #3730a3 !important;
+			border-color: #3730a3 !important;
+		}
+		.flatpickr-months .flatpickr-month, .flatpickr-current-month .flatpickr-monthDropdown-months {
+			color: #fff !important;
+			fill: #fff !important;
+		}
+		.flatpickr-weekday {
+			color: #94a3b8 !important;
+		}
+		.flatpickr-day {
+			color: #e2e8f0 !important;
+		}
+		.flatpickr-day.flatpickr-disabled, .flatpickr-day.flatpickr-disabled:hover {
+			color: #475569 !important;
+		}
+	</style>
 </head>
 <body>
-<form method="POST" action="/room">
-	{% csrf_token %}
-	<table>
-		<tr>
-			<td><p class="ttl">Check in</p></td>
-			<td><input type="date" name="check_in"></td>
-		</tr>
-		<tr>
-			<td><p class="ttl">Check out</p></td>
-			<td><input type="date" name="check_out"></td>
-		</tr>
-	</table>
-	<button class="vtn">Search</button>
-</form>
-<a href="/list_booked"><button class="vtn">List booked rooms</button></a>
+
+<div class="glass-card">
+	<h1>Book Your Stay</h1>
+	<form method="POST" action="/room" onsubmit="return validateForm()">
+		{% csrf_token %}
+		<div class="input-group">
+			<label for="daterange">Select Dates</label>
+			<input type="text" id="daterange" class="date-input" placeholder="Check-in  &rarr;  Check-out" required>
+			<input type="hidden" name="check_in" id="check_in">
+			<input type="hidden" name="check_out" id="check_out">
+		</div>
+		<button type="submit" class="btn btn-primary">Search Availability</button>
+	</form>
+	<a href="/list_booked" style="text-decoration: none;">
+		<button class="btn btn-secondary">View Booked Rooms</button>
+	</a>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+	flatpickr("#daterange", {
+		mode: "range",
+		minDate: "today",
+		dateFormat: "Y-m-d",
+		disableMobile: "true",
+		onChange: function(selectedDates, dateStr, instance) {
+			if (selectedDates.length === 2) {
+				document.getElementById('check_in').value = instance.formatDate(selectedDates[0], "Y-m-d");
+				document.getElementById('check_out').value = instance.formatDate(selectedDates[1], "Y-m-d");
+			} else {
+				document.getElementById('check_in').value = "";
+				document.getElementById('check_out').value = "";
+			}
+		}
+	});
+
+	function validateForm() {
+		const inDate = document.getElementById('check_in').value;
+		const outDate = document.getElementById('check_out').value;
+		if (!inDate || !outDate) {
+			alert("Please select both check-in and check-out dates.");
+			return false;
+		}
+		return true;
+	}
+</script>
+
 </body>
 </html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Booked Rooms | Hotel</title>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--indigo-500: #6366f1;
+			--glass-bg: rgba(17, 25, 40, 0.75);
+			--glass-border: rgba(255, 255, 255, 0.125);
+			--text-main: #ffffff;
+		}
+
+		body {
+			margin: 0;
+			font-family: 'Outfit', sans-serif;
+			background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+			background-size: cover;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-main);
+			padding: 20px;
+			box-sizing: border-box;
+		}
+
+		.glass-card {
+			background: var(--glass-bg);
+			backdrop-filter: blur(16px) saturate(180%);
+			-webkit-backdrop-filter: blur(16px) saturate(180%);
+			border-radius: 12px;
+			border: 1px solid var(--glass-border);
+			padding: 40px;
+			width: 100%;
+			max-width: 800px;
+			box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+			text-align: center;
+		}
+
+		h1 {
+			margin-top: 0;
+			font-weight: 600;
+			font-size: 2rem;
+			background: linear-gradient(to right, #fff, #a5b4fc);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			margin-bottom: 2rem;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-bottom: 30px;
+			color: #e2e8f0;
+		}
+
+		th {
+			text-align: left;
+			padding: 15px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+			color: #a5b4fc;
+			font-weight: 600;
+		}
+
+		td {
+			padding: 15px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+			text-align: left;
+		}
+
+		tr:last-child td {
+			border-bottom: none;
+		}
+
+		.btn {
+			padding: 10px 20px;
+			border: none;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			font-family: inherit;
+			text-decoration: none;
+			display: inline-block;
+		}
+
+		.btn-secondary {
+			background: transparent;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			color: #e2e8f0;
+		}
+
+		.btn-secondary:hover {
+			background: rgba(255, 255, 255, 0.05);
+			border-color: #fff;
+		}
+
+		.btn-danger {
+			background: rgba(239, 68, 68, 0.1);
+			color: #fca5a5;
+			border: 1px solid rgba(239, 68, 68, 0.2);
+			padding: 6px 12px;
+			font-size: 0.9rem;
+		}
+
+		.btn-danger:hover {
+			background: rgba(239, 68, 68, 0.2);
+			border-color: #fca5a5;
+		}
+	</style>
+</head>
+<body>
+	<div class="glass-card">
+		<h1>Booked Rooms Status</h1>
+
+		{% if room %}
+		<table>
+			<thead>
+				<tr>
+					<th>Room No.</th>
+					<th>Booked Dates</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for i in room %}
+				<tr>
+					<td>{{ i.number }}</td>
+					<td>{{ i.dates|safe }}</td>
+					<td>
+						<a href="/debook/{{ i.number }}" class="btn btn-danger" style="text-decoration: none;">Clear</a>
+					</td>
+				</tr>
+				{% endfor %}
+			</tbody>
+		</table>
+		{% else %}
+		<p style="color: #cbd5e1; margin-bottom: 30px;">No rooms are currently booked.</p>
+		{% endif %}
+
+		<a href="/" class="btn btn-secondary">Back to Home</a>
+	</div>
+</body>
+</html>

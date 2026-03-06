@@ -1,18 +1,26 @@
 # Hotel room booking system
-![alt text](https://github.com/abhineetraj1/django-hotel-room-management/blob/main/screenshot.png?raw=true)
-Looking for a way to manage your hotel's room inventory with ease? Check out this Django-based hotel room management system! With this solution, you can easily add, edit, and remove rooms as well as track their availability and reservations. Perfect for hotel owners and managers looking for a simple yet effective way to streamline their operations.
+
+A comprehensive Django-based hotel room management system designed to streamline hotel operations. This application handles room bookings, dynamic pricing using AI, financial tracking, and invoice generation, making it an ideal solution for hotel managers looking for a simple yet effective way to streamline their operations.
 
 ## Features :-
-*	Register rooms
-*	Clear all registerations in room
-*	View registered dates of booked rooms
+*   **Room Booking & Management**: Search for available rooms by date and book them instantly.
+*   **Room Categories**: Support for different room types (Standard, Deluxe) with specific pricing.
+*   **AI-Powered Dynamic Pricing**: Automatically adjusts room prices based on historical demand and booking probability.
+*   **Dashboard & Analytics**: View monthly, weekly, and 30-day revenue stats, along with overdue payments.
+*   **Financial Tracking**: Add extra expenses (e.g., room service) and track partial payments for each booking.
+*   **Invoice Generation**: Generate and download PDF invoices for guests upon checkout.
+*   **Check-in/Check-out System**: Manage guest lifecycles with soft-deletion for history tracking.
 
 ### Note:-
 This project is in developmental phase, it's not ready for production.
 
 ## Installation
 
-1)	Download django
+1.  **Install MongoDB**
+    *   Download and install MongoDB Community Server from [mongodb.com](https://www.mongodb.com/try/download/community).
+    *   Ensure the MongoDB service is running locally on port `27017`.
+
+2.  **Install Python Dependencies**
 ```
 pip3 install django
 ```

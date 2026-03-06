@@ -1,19 +1,368 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>Rooms</title>
+	<title>Booked Rooms | Hotel</title>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--indigo-500: #6366f1;
+			--glass-bg: rgba(17, 25, 40, 0.75);
+			--glass-border: rgba(255, 255, 255, 0.125);
+			--text-main: #ffffff;
+		}
+
+		body {
+			margin: 0;
+			font-family: 'Outfit', sans-serif;
+			background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+			background-size: cover;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-main);
+			padding: 20px;
+			box-sizing: border-box;
+		}
+
+		.glass-card {
+			background: var(--glass-bg);
+			backdrop-filter: blur(16px) saturate(180%);
+			-webkit-backdrop-filter: blur(16px) saturate(180%);
+			border-radius: 12px;
+			border: 1px solid var(--glass-border);
+			padding: 40px;
+			width: 100%;
+			max-width: 800px;
+			box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+			text-align: center;
+		}
+
+		h1 {
+			margin-top: 0;
+			font-weight: 600;
+			font-size: 2rem;
+			background: linear-gradient(to right, #fff, #a5b4fc);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			margin-bottom: 2rem;
+		}
+
+		table {
+			width: 100%;
+			border-collapse: collapse;
+			margin-bottom: 30px;
+			color: #e2e8f0;
+		}
+
+		th {
+			text-align: left;
+			padding: 15px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+			color: #a5b4fc;
+			font-weight: 600;
+		}
+
+		td {
+			padding: 15px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+			text-align: left;
+		}
+
+		tr:last-child td {
+			border-bottom: none;
+		}
+
+		.btn {
+			padding: 10px 20px;
+			border: none;
+			border-radius: 8px;
+			font-size: 1rem;
+			font-weight: 600;
+			cursor: pointer;
+			transition: all 0.3s ease;
+			font-family: inherit;
+			text-decoration: none;
+			display: inline-block;
+		}
+
+		.btn-secondary {
+			background: transparent;
+			border: 1px solid rgba(255, 255, 255, 0.2);
+			color: #e2e8f0;
+		}
+
+		.btn-secondary:hover {
+			background: rgba(255, 255, 255, 0.05);
+			border-color: #fff;
+		}
+
+		.btn-danger {
+			background: rgba(239, 68, 68, 0.1);
+			color: #fca5a5;
+			border: 1px solid rgba(239, 68, 68, 0.2);
+			padding: 6px 12px;
+			font-size: 0.9rem;
+		}
+
+		.btn-danger:hover {
+			background: rgba(239, 68, 68, 0.2);
+			border-color: #fca5a5;
+		}
+
+		.btn-manage {
+			background: rgba(99, 102, 241, 0.1);
+			color: #a5b4fc;
+			border: 1px solid rgba(99, 102, 241, 0.2);
+			padding: 6px 12px;
+			font-size: 0.9rem;
+			text-decoration: none;
+			border-radius: 8px;
+			cursor: pointer;
+		}
+		.btn-manage:hover {
+			background: rgba(99, 102, 241, 0.2);
+			border-color: #a5b4fc;
+		}
+
+		/* Stats Cards */
+		.stats-container {
+			display: grid;
+			grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+			gap: 15px;
+			margin-bottom: 30px;
+		}
+		.stat-card {
+			background: rgba(255, 255, 255, 0.05);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			border-radius: 10px;
+			padding: 15px;
+			text-align: center;
+		}
+		.stat-value {
+			font-size: 1.5rem;
+			font-weight: 600;
+			color: #fff;
+		}
+		.stat-label {
+			font-size: 0.85rem;
+			color: #cbd5e1;
+			margin-top: 5px;
+		}
+
+		/* Modal */
+		.modal-overlay {
+			display: none;
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(0, 0, 0, 0.7);
+			backdrop-filter: blur(5px);
+			z-index: 1000;
+			align-items: center;
+			justify-content: center;
+		}
+		.modal-content {
+			background: #1e293b;
+			border-radius: 12px;
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			width: 90%;
+			max-width: 600px;
+			padding: 30px;
+			max-height: 90vh;
+			overflow-y: auto;
+			text-align: left;
+			color: #fff;
+		}
+		.modal-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+			padding-bottom: 10px;
+		}
+		.modal-section {
+			margin-bottom: 20px;
+			background: rgba(255, 255, 255, 0.03);
+			padding: 15px;
+			border-radius: 8px;
+		}
+		.modal-section h3 {
+			margin-top: 0;
+			font-size: 1rem;
+			color: #a5b4fc;
+			margin-bottom: 10px;
+		}
+		.input-row {
+			display: flex;
+			gap: 10px;
+			margin-top: 10px;
+		}
+		.glass-input {
+			background: rgba(0, 0, 0, 0.2);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			color: #fff;
+			padding: 8px;
+			border-radius: 4px;
+			width: 100%;
+		}
+	</style>
 </head>
 <body>
-<table>
-{% for i in room %}
-<tr>
-	<td>{{i.number}}</td>
-	<td>{{i.dates}}</td>
-	<td><a href="/debook/{{i.number}}">clear all bookings</a></td>
-</tr>
-{% endfor %}
-</table>
+	<div class="glass-card">
+		<h1>Dashboard</h1>
+
+		<div class="stats-container">
+			<div class="stat-card">
+				<div class="stat-value">₹{{ stats.month }}</div>
+				<div class="stat-label">This Month</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-value">₹{{ stats.last_30 }}</div>
+				<div class="stat-label">Last 30 Days</div>
+			</div>
+			<div class="stat-card">
+				<div class="stat-value">₹{{ stats.last_7 }}</div>
+				<div class="stat-label">Last 7 Days</div>
+			</div>
+			<div class="stat-card" style="border-color: rgba(239, 68, 68, 0.3);">
+				<div class="stat-value" style="color: #fca5a5;">₹{{ stats.overdue }}</div>
+				<div class="stat-label">Total Overdue</div>
+			</div>
+		</div>
+
+		{% if room %}
+		<table>
+			<thead>
+				<tr>
+					<th>Room No.</th>
+					<th>Booking Details</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for i in room %}
+				{% for b in i.bookings %}
+				<tr>
+					<td>{{ i.number }}</td>
+					<td>
+						{{ b.check_in }} to {{ b.check_out }}<br>
+						<span style="font-size:0.85em; color:#a5b4fc">{{ b.guest_name }} | {{ b.guest_phone }}</span>
+					</td>
+					<td>
+						{{ b|json_script:b.id }}
+						<button class="btn-manage" onclick="openModal(JSON.parse(document.getElementById('{{ b.id }}').textContent))">Manage</button>
+					</td>
+				</tr>
+				{% endfor %}
+				{% endfor %}
+			</tbody>
+		</table>
+		{% else %}
+		<p style="color: #cbd5e1; margin-bottom: 30px;">No rooms are currently booked.</p>
+		{% endif %}
+
+		<a href="/" class="btn btn-secondary">Back to Home</a>
+	</div>
+
+	<!-- Details Modal -->
+	<div id="detailsModal" class="modal-overlay">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h2 style="margin:0;">Booking Details</h2>
+				<button onclick="closeModal()" style="background:none; border:none; color:#fff; font-size:1.5rem; cursor:pointer;">&times;</button>
+			</div>
+			
+			<div id="modalBody">
+				<!-- Content populated by JS -->
+			</div>
+		</div>
+	</div>
+
+	<script>
+		function openModal(booking) {
+			const modal = document.getElementById('detailsModal');
+			const body = document.getElementById('modalBody');
+			
+			let expensesHtml = '';
+			if (booking.expenses && booking.expenses.length > 0) {
+				expensesHtml = '<ul style="padding-left:20px; margin:5px 0;">' + 
+					booking.expenses.map(e => `<li>${e.name}: ₹${e.amount}</li>`).join('') + 
+					'</ul>';
+			} else {
+				expensesHtml = '<p style="font-size:0.9rem; color:#94a3b8;">No expenses recorded.</p>';
+			}
+
+			let paymentsHtml = '';
+			if (booking.payments && booking.payments.length > 0) {
+				paymentsHtml = '<ul style="padding-left:20px; margin:5px 0;">' + 
+					booking.payments.map(p => `<li>₹${p.amount}</li>`).join('') + 
+					'</ul>';
+			} else {
+				paymentsHtml = '<p style="font-size:0.9rem; color:#94a3b8;">No payments recorded.</p>';
+			}
+
+			body.innerHTML = `
+				<div class="modal-section">
+					<h3>Guest Info</h3>
+					<p><strong>Name:</strong> ${booking.guest_name}</p>
+					<p><strong>Phone:</strong> ${booking.guest_phone}</p>
+					<p><strong>Dates:</strong> ${booking.check_in} to ${booking.check_out}</p>
+				</div>
+
+				<div class="modal-section">
+					<h3>Financials</h3>
+					<p>Room Charge: ₹${booking.total_room_charge}</p>
+					<p>Total Revenue: ₹${booking.total_revenue}</p>
+					<p style="color: ${booking.total_due > 0 ? '#fca5a5' : '#4ade80'}"><strong>Due Amount: ₹${booking.total_due}</strong></p>
+				</div>
+
+				<div class="modal-section">
+					<h3>Expenses</h3>
+					${expensesHtml}
+					<form action="/add_expense" method="POST" class="input-row">
+						{% csrf_token %}
+						<input type="hidden" name="booking_id" value="${booking.id}">
+						<input type="text" name="expense_name" placeholder="Service Name" class="glass-input" required>
+						<input type="number" name="expense_amount" placeholder="Amount" class="glass-input" style="width:100px;" required>
+						<button type="submit" class="btn-manage">Add</button>
+					</form>
+				</div>
+
+				<div class="modal-section">
+					<h3>Payments</h3>
+					${paymentsHtml}
+					<form action="/add_payment" method="POST" class="input-row">
+						{% csrf_token %}
+						<input type="hidden" name="booking_id" value="${booking.id}">
+						<input type="number" name="payment_amount" placeholder="Amount Paid" class="glass-input" required>
+						<button type="submit" class="btn-manage">Add</button>
+					</form>
+				</div>
+				
+				<div style="text-align:right; margin-top:20px;">
+					<a href="/debook/${booking.room_number}" class="btn btn-danger" style="text-decoration:none; font-size:0.9rem;">Clear Booking</a>
+				</div>
+			`;
+			
+			modal.style.display = 'flex';
+		}
+
+		function closeModal() {
+			document.getElementById('detailsModal').style.display = 'none';
+		}
+
+		window.onclick = function(event) {
+			const modal = document.getElementById('detailsModal');
+			if (event.target == modal) {
+				closeModal();
+			}
+		}
+	</script>
 </body>
 </html>
