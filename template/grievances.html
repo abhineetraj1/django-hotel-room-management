@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Grievance Management | Hotel</title>
+	<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+	<style>
+		:root {
+			--indigo-500: #6366f1;
+			--glass-bg: rgba(17, 25, 40, 0.75);
+			--glass-border: rgba(255, 255, 255, 0.125);
+			--text-main: #ffffff;
+		}
+
+		body {
+			margin: 0;
+			font-family: 'Outfit', sans-serif;
+			background: url('https://images.unsplash.com/photo-1618773928121-c32242e63f39?q=80&w=2070&auto=format&fit=crop') no-repeat center center fixed;
+			background-size: cover;
+			min-height: 100vh;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: var(--text-main);
+			padding: 20px;
+			box-sizing: border-box;
+		}
+
+		.glass-card {
+			background: var(--glass-bg);
+			backdrop-filter: blur(16px) saturate(180%);
+			-webkit-backdrop-filter: blur(16px) saturate(180%);
+			border-radius: 12px;
+			border: 1px solid var(--glass-border);
+			padding: 40px;
+			width: 100%;
+			max-width: 900px;
+			box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+			text-align: center;
+		}
+
+		h1 {
+			margin-top: 0;
+			font-weight: 600;
+			font-size: 2rem;
+			background: linear-gradient(to right, #fff, #a5b4fc);
+			-webkit-background-clip: text;
+			-webkit-text-fill-color: transparent;
+			margin-bottom: 2rem;
+		}
+
+		table { width: 100%; border-collapse: collapse; margin-bottom: 30px; color: #e2e8f0; }
+		th { text-align: left; padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.2); color: #a5b4fc; font-weight: 600; }
+		td { padding: 15px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); text-align: left; }
+		tr:last-child td { border-bottom: none; }
+
+		.btn { padding: 8px 16px; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; text-decoration: none; display: inline-block; }
+		.btn-secondary { background: transparent; border: 1px solid rgba(255, 255, 255, 0.2); color: #e2e8f0; }
+		.btn-secondary:hover { background: rgba(255, 255, 255, 0.05); border-color: #fff; }
+		.btn-primary { background: var(--indigo-500); color: white; border: 1px solid var(--indigo-500); }
+		.btn-primary:hover { background: #4f46e5; border-color: #4f46e5; }
+
+		.glass-input {
+			background: rgba(0, 0, 0, 0.2);
+			border: 1px solid rgba(255, 255, 255, 0.1);
+			color: #fff;
+			padding: 8px;
+			border-radius: 4px;
+		}
+		
+		.status-badge {
+			padding: 4px 8px;
+			border-radius: 4px;
+			font-size: 0.8rem;
+			font-weight: 600;
+			text-transform: uppercase;
+		}
+		.status-pending { background: rgba(234, 179, 8, 0.2); color: #fde047; }
+		.status-action_taken { background: rgba(74, 222, 128, 0.2); color: #4ade80; }
+		.status-abandoned { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+	</style>
+</head>
+<body>
+	<div class="glass-card">
+		<h1>Grievance Manager</h1>
+
+		<div style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1); margin-bottom: 30px; text-align: left;">
+			<h2 style="margin-top: 0; font-size: 1.25rem; color: #a5b4fc;">Log a Grievance</h2>
+			<form action="/add_grievance" method="POST" style="margin-top: 15px;">
+				{% csrf_token %}
+				<div style="display: flex; gap: 10px; margin-bottom: 10px;">
+					<input type="text" name="customer_name" placeholder="Guest Name (Optional)" class="glass-input" style="flex: 1;">
+					<select name="status" class="glass-input" style="width: 200px;">
+						<option value="pending">Pending</option>
+						<option value="action_taken">Action Taken</option>
+						<option value="abandoned">Abandoned</option>
+					</select>
+				</div>
+				<textarea name="description" placeholder="Describe the grievance / issue..." class="glass-input" rows="3" required style="width: 100%; box-sizing: border-box; resize: vertical; margin-bottom: 10px;"></textarea>
+				<button type="submit" class="btn btn-primary">Submit Grievance</button>
+			</form>
+		</div>
+
+		<div style="margin-bottom: 20px; text-align: left;">
+			<span style="color: #cbd5e1; margin-right: 15px;">Filter by Status:</span>
+			<a href="/grievances?status=all" class="btn {% if current_filter == 'all' or not current_filter %}btn-primary{% else %}btn-secondary{% endif %}" style="margin-right: 5px;">All</a>
+			<a href="/grievances?status=pending" class="btn {% if current_filter == 'pending' %}btn-primary{% else %}btn-secondary{% endif %}" style="margin-right: 5px;">Pending</a>
+			<a href="/grievances?status=action_taken" class="btn {% if current_filter == 'action_taken' %}btn-primary{% else %}btn-secondary{% endif %}" style="margin-right: 5px;">Action Taken</a>
+			<a href="/grievances?status=abandoned" class="btn {% if current_filter == 'abandoned' %}btn-primary{% else %}btn-secondary{% endif %}">Abandoned</a>
+		</div>
+
+		<table>
+			<thead>
+				<tr>
+					<th>Date/Time</th>
+					<th>Guest Name</th>
+					<th>Description</th>
+					<th>Status</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+				{% for g in grievances %}
+				<tr>
+					<td style="font-size: 0.85rem; color: #94a3b8;">{{ g.datetime|date:"Y-m-d H:i" }}</td>
+					<td>{{ g.customer_name }}</td>
+					<td style="max-width: 250px; line-height: 1.4;">{{ g.description }}</td>
+					<td>
+						<span class="status-badge status-{{ g.status }}">{{ g.status|replace:"_,' '"|title }}</span>
+					</td>
+					<td>
+						<form action="/update_grievance" method="POST" style="display: flex; gap: 5px;">
+							{% csrf_token %}
+							<input type="hidden" name="id" value="{{ g.id }}">
+							<select name="status" class="glass-input" onchange="this.form.submit()" style="padding: 4px;">
+								<option value="pending" {% if g.status == 'pending' %}selected{% endif %}>Pending</option>
+								<option value="action_taken" {% if g.status == 'action_taken' %}selected{% endif %}>Action Taken</option>
+								<option value="abandoned" {% if g.status == 'abandoned' %}selected{% endif %}>Abandoned</option>
+							</select>
+						</form>
+					</td>
+				</tr>
+				{% empty %}
+				<tr><td colspan="5" style="text-align: center; color: #94a3b8;">No grievances match this filter.</td></tr>
+				{% endfor %}
+			</tbody>
+		</table>
+
+		<a href="/list_booked" class="btn btn-secondary">Back to Dashboard</a>
+	</div>
+</body>
+</html>

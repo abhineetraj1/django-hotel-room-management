@@ -24,8 +24,8 @@ def get_db():
     if 'rooms' not in db.list_collection_names():
         print("Creating 'rooms' collection and populating with sample rooms.")
         rooms_collection = db['rooms']
-        sample_rooms = [{'number': str(i), 'category': 'Standard'} for i in range(101, 111)] + \
-                       [{'number': str(i), 'category': 'Deluxe'} for i in range(201, 211)]
+        sample_rooms = [{'number': str(i), 'category': 'Medium', 'price': 2000} for i in range(101, 111)] + \
+                       [{'number': str(i), 'category': 'Large', 'price': 4000} for i in range(201, 211)]
         if sample_rooms:
             rooms_collection.insert_many(sample_rooms)
 
@@ -34,9 +34,9 @@ def get_db():
         db.create_collection('bookings')
         print("Creating 'bookings' collection.")
     
-    # Migration: Ensure existing rooms have categories if they were created previously
-    db.rooms.update_many({"category": {"$exists": False}, "number": {"$regex": "^1"}}, {"$set": {"category": "Standard"}})
-    db.rooms.update_many({"category": {"$exists": False}, "number": {"$regex": "^2"}}, {"$set": {"category": "Deluxe"}})
+    # Migration: Ensure existing rooms have pricing and sizing categories
+    db.rooms.update_many({"price": {"$exists": False}, "category": "Standard"}, {"$set": {"price": 2000, "category": "Medium"}})
+    db.rooms.update_many({"price": {"$exists": False}, "category": "Deluxe"}, {"$set": {"price": 4000, "category": "Large"}})
         
     return db, client
 
@@ -76,11 +76,28 @@ def predict_demand_ai(db, check_in_date_str):
         print(f"AI Prediction Error: {e}")
         return 1.0
 
+def is_spam_grievance(db, new_desc):
+    """ AI Spam Reduction: Uses Jaccard Similarity to block highly repetitive grievances """
+    recent_grievances = list(db.grievances.find().sort("datetime", -1).limit(20))
+    new_words = set(new_desc.lower().split())
+    if not new_words: return False
+    
+    for g in recent_grievances:
+        g_words = set(g.get('description', '').lower().split())
+        if not g_words: continue
+        
+        intersection = len(new_words.intersection(g_words))
+        union = len(new_words.union(g_words))
+        if union > 0 and (intersection / union) > 0.65:  # 65% similarity threshold
+            return True
+    return False
+
 def Home(request):
 	return render(request, "index.html")
 
 def Room(request):
 	if request.method == "POST":
+		quantity = int(request.POST.get("quantity", 1))
 		check_in_str = request.POST.get("check_in")
 		check_out_str = request.POST.get("check_out")
 
@@ -98,78 +115,126 @@ def Room(request):
 			# A booking overlaps if (booking.check_in < requested_checkout) AND (booking.check_out > requested_checkin).
 			overlap_query = {
 				"check_in": {"$lt": check_out_str},
-				"check_out": {"$gt": check_in_str}
+				"check_out": {"$gt": check_in_str},
+				"status": {"$ne": "checked_out"}
 			}
 			
 			overlapping_bookings = db.bookings.find(overlap_query, {"room_number": 1})
 			booked_room_numbers = {booking['room_number'] for booking in overlapping_bookings}
 
-			# Get all room numbers from the rooms collection
-			all_rooms = db.rooms.find({}, {"number": 1, "_id": 0})
-			all_room_numbers = {room['number'] for room in all_rooms}
-
-			# Available rooms are the set difference between all rooms and booked rooms
-			available_room_numbers = sorted(list(all_room_numbers - booked_room_numbers))
+			# Get all available room documents
+			available_rooms_cursor = db.rooms.find({"number": {"$nin": list(booked_room_numbers)}})
 			
+			# Group available rooms by category to fulfill the quantity request
+			categories = {}
+			for r in available_rooms_cursor:
+				cat = r.get("category", "Medium")
+				if cat not in categories:
+					categories[cat] = {"count": 0, "base_price": r.get("price", 2000)}
+				categories[cat]["count"] += 1
+
 			# AI-Powered Dynamic Pricing
-			base_price = 2000
 			demand_multiplier = predict_demand_ai(db, check_in_str)
 			
-			# Apply AI multiplier
-			price = int(base_price * demand_multiplier)
+			available_categories = []
+			for cat_name, data in categories.items():
+				# Only show categories that have enough inventory
+				if data["count"] >= quantity:
+					data["name"] = cat_name
+					data["price"] = int(data["base_price"] * demand_multiplier)
+					available_categories.append(data)
 			
 		finally:
 			client.close()
 
 		return render(request, "rooms.html", {
-			"r": available_room_numbers,
+			"categories": available_categories,
 			"message": "none",
 			"in_d": check_in_str,
 			"out_d": check_out_str,
-			"price": int(price)
+			"quantity": quantity
 		})
 	else:
 		return render(request, "message.html", {
-			"title": "Welcome",
-			"message": "Please use the home page to search for rooms.",
+			"title": "Booking Error",
+			"message": "Invalid request method.",
 			"url": "/",
-			"button_text": "Go Home"
+			"button_text": "Back to Home"
 		})
 
-def Book(request, room, in_d, out_d, name, phone, price):
+def Book(request, room=None, in_d=None, out_d=None, name=None, phone=None, price=None):
+	if request.method == "POST":
+		category = request.POST.get("category")
+		quantity = int(request.POST.get("quantity", 1))
+		in_d = request.POST.get("in_d")
+		out_d = request.POST.get("out_d")
+		name = request.POST.get("name")
+		phone = request.POST.get("phone")
+		price = request.POST.get("price")
+
+	if not all([category, in_d, out_d, name, phone, price]):
+		return render(request, "message.html", {
+			"title": "Booking Error",
+			"message": "Missing booking details. Please make sure all details are filled.",
+			"url": "/",
+			"button_text": "Back to Home"
+		})
+
 	# Calculate total room charge
 	d1 = datetime.strptime(in_d, "%Y-%m-%d")
 	d2 = datetime.strptime(out_d, "%Y-%m-%d")
 	days = (d2 - d1).days
+	if days <= 0: days = 1
 	total_charge = days * int(price)
 
 	db, client = get_db()
 	try:
-		# Fetch room category
-		room_doc = db.rooms.find_one({"number": room})
-		category = room_doc.get("category", "Standard") if room_doc else "Standard"
-
-		booking_doc = {
-			"room_number": room,
-			"room_category": category,
-			"check_in": in_d,
-			"check_out": out_d,
-			"guest_name": name,
-			"guest_phone": phone,
-			"price_per_night": int(price),
-			"total_room_charge": total_charge,
-			"booked_at": datetime.utcnow(),
-			"expenses": [],
-			"payments": []
+		overlap_query = {
+			"check_in": {"$lt": out_d},
+			"check_out": {"$gt": in_d},
+			"status": {"$ne": "checked_out"}
 		}
-		db.bookings.insert_one(booking_doc)
+		overlapping_bookings = db.bookings.find(overlap_query, {"room_number": 1})
+		booked_room_numbers = {b['room_number'] for b in overlapping_bookings}
+
+		# Find exact number of available rooms matching the chosen category
+		available_rooms = list(db.rooms.find({
+			"category": category, 
+			"number": {"$nin": list(booked_room_numbers)}
+		}).limit(quantity))
+		
+		if len(available_rooms) < quantity:
+			return render(request, "message.html", {
+				"title": "Booking Failed",
+				"message": "Apologies, but the requested quantity of rooms is no longer available.",
+				"url": "/",
+				"button_text": "Back to Home"
+			})
+
+		assigned_rooms = []
+		for r in available_rooms:
+			db.bookings.insert_one({
+				"room_number": r['number'],
+				"room_category": category,
+				"check_in": in_d,
+				"check_out": out_d,
+				"guest_name": name,
+				"guest_phone": phone,
+				"price_per_night": int(price),
+				"total_room_charge": total_charge,
+				"booked_at": datetime.utcnow(),
+				"expenses": [],
+				"payments": [],
+				"status": "booked"
+			})
+			assigned_rooms.append(r['number'])
 	finally:
 		client.close()
 	return render(request, "message.html", {
 		"title": "Booking Confirmed",
-		"message": f"Room {room} has been booked successfully!",
-		"url": "/",
-		"button_text": "Back to Home"
+		"message": f"Successfully booked {quantity} room(s): {', '.join(assigned_rooms)}!",
+		"url": "/list_booked",
+		"button_text": "View Bookings"
 	})
 
 def add_expense(request):
@@ -219,11 +284,16 @@ def list_booked(request):
 	start_of_month = datetime(now.year, now.month, 1)
 	last_30 = now - timedelta(days=30)
 	last_7 = now - timedelta(days=7)
+	today_str = now.strftime("%Y-%m-%d")
 	
 	profit_month = 0
 	profit_30 = 0
 	profit_7 = 0
 	total_overdue = 0
+
+	todays_check_ins = []
+	todays_check_outs = []
+	unpaid_bookings = []
 
 	try:
 		bookings = list(db.bookings.find({}))
@@ -232,10 +302,10 @@ def list_booked(request):
 		rooms_dict = {}
 		
 		for b in bookings:
-			# Skip checked-out rooms for the visual list, but keep them for stats above
-			if b.get('status') == 'checked_out':
-				continue
-
+			b_id = str(b['_id'])
+			b['id'] = b_id
+			del b['_id']
+			
 			# Calculate totals
 			room_charge = b.get("total_room_charge", 0)
 			expenses_total = sum(e.get("amount", 0) for e in b.get("expenses", []))
@@ -243,8 +313,10 @@ def list_booked(request):
 			
 			total_revenue = room_charge + expenses_total
 			due = total_revenue - payments_total
-			total_overdue += due
 			
+			b['total_revenue'] = total_revenue
+			b['total_due'] = due
+
 			b_date = b.get("booked_at")
 			if b_date:
 				if b_date >= start_of_month:
@@ -254,10 +326,21 @@ def list_booked(request):
 				if b_date >= last_7:
 					profit_7 += total_revenue
 			
-			b['id'] = str(b['_id'])
-			del b['_id']
-			b['total_revenue'] = total_revenue
-			b['total_due'] = due
+			is_checked_out = b.get('status') == 'checked_out'
+			
+			if not is_checked_out:
+				total_overdue += due
+				if due > 0:
+					unpaid_bookings.append(b)
+
+			if b.get("check_in") == today_str and not is_checked_out:
+				todays_check_ins.append(b)
+			if b.get("check_out") == today_str and not is_checked_out:
+				todays_check_outs.append(b)
+
+			# Skip checked-out rooms for the visual list
+			if is_checked_out:
+				continue
 			
 			r_num = b['room_number']
 			if r_num not in rooms_dict:
@@ -276,6 +359,9 @@ def list_booked(request):
 		
 	return render(request, "pr.html", {
 		"room": booked_rooms_info,
+		"todays_check_ins": todays_check_ins,
+		"todays_check_outs": todays_check_outs,
+		"unpaid_bookings": unpaid_bookings,
 		"stats": {
 			"month": profit_month,
 			"last_30": profit_30,
@@ -320,25 +406,145 @@ def download_invoice(request, booking_id):
 	p = canvas.Canvas(buffer, pagesize=letter)
 	
 	# Header
-	p.setFont("Helvetica-Bold", 16)
-	p.drawString(100, 750, "HOTEL INVOICE")
+	p.setFont("Helvetica-Bold", 20)
+	p.drawString(50, 750, "HOTEL INVOICE")
 	
 	# Details
 	p.setFont("Helvetica", 12)
 	y = 700
-	p.drawString(100, y, f"Guest Name: {booking.get('guest_name')}")
-	p.drawString(100, y-20, f"Room Number: {booking.get('room_number')} ({booking.get('room_category', 'Standard')})")
-	p.drawString(100, y-40, f"Check In: {booking.get('check_in')}")
-	p.drawString(100, y-60, f"Check Out: {booking.get('check_out')}")
+	p.drawString(50, y, f"Invoice ID: {str(booking['_id'])[-6:].upper()}")
+	p.drawString(300, y, f"Date: {datetime.utcnow().strftime('%Y-%m-%d')}")
+	
+	y -= 30
+	p.drawString(50, y, f"Guest Name: {booking.get('guest_name')}")
+	p.drawString(300, y, f"Phone: {booking.get('guest_phone', 'N/A')}")
+	
+	y -= 20
+	p.drawString(50, y, f"Room Number: {booking.get('room_number')} ({booking.get('room_category', 'Standard')})")
+	
+	y -= 20
+	p.drawString(50, y, f"Check In: {booking.get('check_in')}")
+	p.drawString(300, y, f"Check Out: {booking.get('check_out')}")
 	
 	# Financials
-	p.drawString(100, y-100, f"Room Charge: ${booking.get('total_room_charge')}")
+	y -= 40
+	p.setFont("Helvetica-Bold", 14)
+	p.drawString(50, y, "Charges Breakdown")
+	
+	y -= 25
+	p.setFont("Helvetica", 12)
+	p.drawString(50, y, "Room Charge:")
+	p.drawString(400, y, f"Rs. {booking.get('total_room_charge')}")
+	
 	expenses = sum(e.get('amount', 0) for e in booking.get('expenses', []))
-	p.drawString(100, y-120, f"Extra Expenses: ${expenses}")
-	p.drawString(100, y-140, f"Total Total: ${booking.get('total_room_charge') + expenses}")
+	for exp in expenses:
+		y -= 20
+		p.drawString(50, y, f"Extra: {exp.get('name')}")
+		p.drawString(400, y, f"Rs. {exp.get('amount')}")
+		
+	total_charge = booking.get('total_room_charge', 0) + sum(e.get('amount', 0) for e in expenses)
+	y -= 30
+	p.setFont("Helvetica-Bold", 12)
+	p.drawString(50, y, "Total Charges:")
+	p.drawString(400, y, f"Rs. {total_charge}")
+	
+	y -= 40
+	p.setFont("Helvetica-Bold", 14)
+	p.drawString(50, y, "Payments Received")
+	p.setFont("Helvetica", 12)
+	
+	payments = booking.get('payments', [])
+	total_paid = 0
+	if payments:
+		for pay in payments:
+			y -= 20
+			pay_date = pay.get('date').strftime('%Y-%m-%d') if isinstance(pay.get('date'), datetime) else 'N/A'
+			p.drawString(50, y, f"Payment on {pay_date}")
+			p.drawString(400, y, f"Rs. {pay.get('amount')}")
+			total_paid += pay.get('amount', 0)
+	else:
+		y -= 20
+		p.drawString(50, y, "No payments recorded.")
+		
+	y -= 30
+	p.setFont("Helvetica-Bold", 12)
+	p.drawString(50, y, "Total Paid:")
+	p.drawString(400, y, f"Rs. {total_paid}")
+	
+	due_amount = total_charge - total_paid
+	y -= 25
+	p.drawString(50, y, "Balance Due:")
+	if due_amount > 0:
+		p.setFillColorRGB(0.8, 0, 0)
+	else:
+		p.setFillColorRGB(0, 0.6, 0)
+	p.drawString(400, y, f"Rs. {due_amount}")
 	
 	p.showPage()
 	p.save()
 	
 	buffer.seek(0)
 	return FileResponse(buffer, as_attachment=True, filename=f"invoice_{booking_id}.pdf")
+
+def add_rooms(request):
+	if request.method == "POST":
+		category = request.POST.get("category")
+		price = int(request.POST.get("price"))
+		quantity = int(request.POST.get("quantity"))
+		db, client = get_db()
+		try:
+			# Auto-generate room IDs by prefixing Size and incrementing count
+			existing_count = db.rooms.count_documents({"category": category})
+			prefix = category[0].upper()
+			new_rooms = []
+			for i in range(1, quantity + 1):
+				new_rooms.append({
+					"number": f"{prefix}-{existing_count + i}",
+					"category": category,
+					"price": price
+				})
+			if new_rooms:
+				db.rooms.insert_many(new_rooms)
+		finally:
+			client.close()
+	return HttpResponseRedirect("/list_booked")
+
+def grievances(request):
+	db, client = get_db()
+	try:
+		status_filter = request.GET.get("status", "all")
+		query = {}
+		if status_filter != "all":
+			query["status"] = status_filter
+			
+		g_list = list(db.grievances.find(query).sort("datetime", -1))
+		for g in g_list:
+			g['id'] = str(g['_id'])
+	finally:
+		client.close()
+	return render(request, "grievances.html", {"grievances": g_list, "current_filter": status_filter})
+
+def add_grievance(request):
+	if request.method == "POST":
+		desc = request.POST.get("description")
+		name = request.POST.get("customer_name", "Anonymous")
+		status = request.POST.get("status", "pending")
+		db, client = get_db()
+		try:
+			if is_spam_grievance(db, desc):
+				return render(request, "message.html", {"title": "Spam Detected", "message": "This grievance looks too similar to a recently submitted one.", "url": "/grievances", "button_text": "Back"})
+			db.grievances.insert_one({"description": desc, "customer_name": name, "datetime": datetime.utcnow(), "status": status})
+		finally:
+			client.close()
+	return HttpResponseRedirect("/grievances")
+
+def update_grievance(request):
+	if request.method == "POST":
+		g_id = request.POST.get("id")
+		status = request.POST.get("status")
+		db, client = get_db()
+		try:
+			db.grievances.update_one({"_id": ObjectId(g_id)}, {"$set": {"status": status}})
+		finally:
+			client.close()
+	return HttpResponseRedirect("/grievances")

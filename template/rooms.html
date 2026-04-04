@@ -186,14 +186,14 @@
 	<div class="glass-card">
 		<h1>Available Rooms</h1>
 		<p class="subtitle">Showing availability for {{ in_d }} to {{ out_d }}</p>
-		<p class="subtitle" style="margin-top: -1.5rem; color: #818cf8; font-weight: 600;">Price per night: ₹{{ price }}</p>
 
-		{% if r %}
+		{% if categories %}
 		<div class="rooms-grid">
-			{% for i in r %}
-			<div class="room-card" onclick="bookRoom('{{ i }}')">
-				<div class="room-number">{{ i }}</div>
-				<div style="color: #4ade80; font-size: 0.9rem;">Available</div>
+			{% for cat in categories %}
+			<div class="room-card" onclick="bookRoom('{{ cat.name }}', {{ cat.price }})">
+				<div class="room-number">{{ cat.name }} Room</div>
+				<div style="color: #4ade80; font-size: 0.9rem;">Available: {{ cat.count }}</div>
+				<div style="color: #a5b4fc; font-size: 0.9rem; margin-top: 5px; font-weight: 600;">₹{{ cat.price }} / night</div>
 			</div>
 			{% endfor %}
 		</div>
@@ -211,20 +211,30 @@
 		<div class="modal-content">
 			<h2 style="margin-top: 0; color: #fff;">Guest Details</h2>
 			<p style="color: #cbd5e1;">Enter the name for the reservation.</p>
-			<input type="text" id="guestName" class="glass-input" placeholder="Guest Name" style="margin-bottom: 10px;">
-			<input type="tel" id="guestPhone" class="glass-input" placeholder="Phone Number" style="margin-top: 0;">
-			<div class="modal-actions">
-				<button onclick="closeModal()" class="btn btn-secondary" style="width: auto;">Cancel</button>
-				<button onclick="confirmBooking()" class="btn btn-primary" style="width: auto;">Confirm Booking</button>
-			</div>
+			<form method="POST" action="/book">
+				{% csrf_token %}
+				<input type="hidden" name="category" id="formCategory">
+				<input type="hidden" name="in_d" value="{{ in_d }}">
+				<input type="hidden" name="out_d" value="{{ out_d }}">
+				<input type="hidden" name="price" id="formPrice">
+				<input type="hidden" name="quantity" value="{{ quantity }}">
+				<input type="text" name="name" id="guestName" class="glass-input" placeholder="Guest Name" required style="margin-bottom: 10px;">
+				<input type="tel" name="phone" id="guestPhone" class="glass-input" placeholder="Phone Number" required style="margin-top: 0;">
+				<div class="modal-actions">
+					<button type="button" onclick="closeModal()" class="btn btn-secondary" style="width: auto;">Cancel</button>
+					<button type="submit" class="btn btn-primary" style="width: auto;">Confirm Booking</button>
+				</div>
+			</form>
 		</div>
 	</div>
 
 	<script>
-		let selectedRoom = null;
+		let selectedCategory = null;
 
-		function bookRoom(room) {
-			selectedRoom = room;
+		function bookRoom(category, price) {
+			selectedCategory = category;
+			document.getElementById('formCategory').value = category;
+			document.getElementById('formPrice').value = price;
 			document.getElementById('bookingModal').style.display = 'flex';
 			document.getElementById('guestName').focus();
 		}
@@ -232,16 +242,8 @@
 		function closeModal() {
 			document.getElementById('bookingModal').style.display = 'none';
 			document.getElementById('guestName').value = '';
-			selectedRoom = null;
-		}
-
-		function confirmBooking() {
-			const person = document.getElementById('guestName').value;
-			if (person && selectedRoom) {
-				window.location.href = "/book/" + selectedRoom + "/{{ in_d }}/{{ out_d }}/" + encodeURIComponent(person) + "/" + encodeURIComponent(phone) + "/{{ price }}";
-			} else {
-				alert("Please enter a guest name.");
-			}
+			document.getElementById('guestPhone').value = '';
+			selectedCategory = null;
 		}
 
 		// Close modal when clicking outside
